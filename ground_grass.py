@@ -50,6 +50,7 @@ squares = {}
 
 
 
+
 class cell():
 	def __init__(self, *coordinates):
 		'''coordinates - x and y coordinates of cell. Z value will be ignored.
@@ -58,26 +59,10 @@ class cell():
 			self.x = coordinates[0][0]
 			self.y = coordinates[0][1]
 		self.objects = []
-		
-	def move(self, x, y):
-		'''Moves center of cell to need X and Y destance.
-		'''
-		self.x += x
-		self.y += y
-		
-	def remove_objects(self):
-		if self.objects:
-			for object in self.objects:
-				object.endObject()
-		
 
-def grass():
-	'''Пока не работает. 
-	Возможно в будущем заменим на change_squares().
-	'''
-	print(scene.objects['ground'].children)
-	create_squares()
-	pass
+
+
+
 
 
 def refresh_camera():
@@ -89,42 +74,35 @@ def refresh_camera():
 	camera_position = current_camera.WorldPosition
 
 
+
+
 def create_squares():
 	'''Создает переменные для квадратов. Вида [[координаты], [список объектов травы]].
 	Координаты - список из трех чисел: x, y, z. Доступ можно получить как по номерам,так и по буквам.
 	Объект травы - либо меш, либо объект арматуры, на который прикреплен меш.
-	v1
+	rev1
 	'''
 	global squares
 	
-	squares[1] = cell(camera_position)
-	squares[2] = cell(camera_position)
-	squares[3] = cell(camera_position)
+	squares[1] = cell((squares[5].x + size, squares[5].y + size))
+	squares[2] = cell((squares[5].x + size, squares[5].y))
+	squares[3] = cell((squares[5].x + size, squares[5].y - size))
+	squares[4] = cell((squares[5].x, squares[5].y + size))
+	squares[5] = cell(camera_position)
+	squares[6] = cell((squares[5].x, squares[5].y - step))
+	squares[7] = cell((squares[5].x - size, squares[5].y + size))
+	squares[8] = cell((squares[5].x - step, squares[5].y))
+	squares[9] = cell((squares[5].x - step, squares[5].y - step))
 	
-	squares[4] = cell(ccamera_position)
-	squares[5] = cell(ccamera_position)
-	squares[6] = cell(camera_position)
-	
-	squares[7] = cell(camera_position)
-	squares[8] = cell(camera_position)
-	squares[9] = cell(camera_position)
-	
-	squares[1].x += size; squares[1].y += size; 
-	squares[2].x += size;
-	squares[3].x += size; squares[3].y -= size;
-	
-	squares[4].y += size;
-	squares[6].y -= size;
-	
-	squares[7].x -= size; squares[7].y += size;
-	squares[8].x -= size;
-	squares[9].x -= size; squares[9].y -= size;
-	
+	place_objects(1, 2, 3, 4, 5, 6, 7, 8, 9)
+
+
+
 
 def change_squares():
 	'''Основная функция.
 	Если передвинулся в сторону любую больше чем на 5 метров, тогда убираем лишние квадраты и рисуем недостающие.
-	v1
+	rev1
 	'''
 	if where_was_the_step() == 1:  # вверх-влево
 		remove_objects(3, 6, 7, 8, 9)  # before new links will created
@@ -257,6 +235,8 @@ def change_squares():
 		place_objects(3, 6, 7, 8, 9)
 
 
+
+
 def where_was_the_step():
 	'''Calculates, was character moved to another square, or not.
 	If yes - returns the direction.
@@ -281,35 +261,49 @@ def where_was_the_step():
 		if camera_position.y - squares[5].y < distance_to_change:  # to middle-right
 			return 6
 		else:  # to middle-middle
-			return 5
+			return 5	
 
 
-def step_forward_left():
-	'''Переднюю левую клетку делает центральной. Ненужные удаляем, нужные добавляем.
-	Вызывается из change_squares().
-	v1
-	'''
-	pass	
 
 
 def place_objects():
 	pass
 
 
-def delete_grass_in_squares(*squares):
+
+
+def remove_objects(*squares):
 	'''Вызывает метод завершения у объектов травы в данном квадрате вида: 
 	[[координаты], [список объектов травы]].
 	Вызывается из step_forward_left(), которая вызывается из change_squares().
 	'''
-	if not squares: return
+	if not squares:
+		print('remove_objects(): Squares with grass are absent!')
+		return
 
 	for square in squares:
-		try: x[1]
-		except IndexError: continue  # если травы в квадрате нету
-		for grass_object in square[1]:  # по объектам травы
-			if grass_object.children:
-				grass_object.children[0].endObject()
-			grass_object.endObject()
+		if not len(square.objects):  # no grass in cell
+			print('remove_objects(): Squares with grass are empty!')
+			return
+		else:  # grass is present
+			for obj in square.objects():
+				delete_recursive(obj)
+
+
+def delete_recursive(obj):
+	'''Recursivly deletes objects and all their children.
+	rev1
+	'''
+	if obj.children:
+		for child in obj.children:
+			delete_recursive(child)
+		print('deleting', obj)
+		obj.endObject()
+	else:
+		print('deleting', obj)
+		obj.endObject()
+
+
 
 
 create_squares()  # при первом запуске модуля
