@@ -37,15 +37,28 @@ Revision: 2
 '''
 
 import bge
+import random
+
 
 
 scene = bge.logic.getCurrentScene()
+obj = bge.logic.getCurrentController().owner
+
 current_camera = scene.active_camera
 camera_position = scene.active_camera.worldPosition
+
 size = 5  # размер квадрата для помещения травы. Всего их 9 штук, камера всегда находится над центральным.
+grass_amount = 20  # amount of grass objects in one square
 hysteresis = 0.3  # размер, на который нужно пройти больше расстояние за границу квадрата, чтобы поменять квадраты. Нужен для того чтобы не было рывков и постоянных подгрузок, если персонаж стоит на краю и ходит туда-сюда.
 distance_to_change = (square_size / 2) + hysteresis  # расстояние, на которое должен ГГ пройти чтобы поменялись квадраты
+height_for_ray = 200  # height, from which ray is casted towards ground for placing grass.
+# No ray - no grass. If ray is below ground - no grass.
+
 squares = {}
+
+# Список объектов состоит из кортежей: (имя_объекта_травы, коефициент).
+# Коефициент отображает вероятность появления
+grass_objects = [('grass_1_armature', 0.5), ('grass_2_armature', 0.01), ('grass_3_armature', 0.05), ('grass_4_armature', 0.1), ('grass_6_armature', 10), ('grass_dry', 0.1), ('grass_liana', 0.1), ('grass_violent', 0.2)]
 
 
 
@@ -240,6 +253,8 @@ def change_squares():
 def where_was_the_step():
 	'''Calculates, was character moved to another square, or not.
 	If yes - returns the direction.
+	Calculates moving according to "distance_to_change", which includes
+	hysteresis.
 	'''
 	if camera_position.x - squares[5].x > distance_to_change:  # to top
 		if camera_position.y - squares[5].y > distance_to_change:  # to top-left
@@ -266,9 +281,25 @@ def where_was_the_step():
 
 
 
-def place_objects():
-	pass
+def place_objects(*_squares):
+	for _square in _squares:
+		
+		for _count in range(grass_amount):
+			_coord_x = random.randrange(_square.x + size / 2, _square.x - size / 2, 0.01)
+			_coord_y = random.randrange(_square.y + size / 2, _square.y - size / 2, 0.01)
+			point_from = (_coord_x, _coord_y, height_for_ray)
+			point_to = (_coord_x, _coord_y, 0)
+			answer = obj.rayCast(point_from, point_to, 0, 'ground', 0, 1, 2, 0b1111111111111111)
+			if 
 
+
+
+
+def what_to_place():
+	'''Returns object, which will be spawned.
+	It chooses object from the list of availible objects,
+	depending on it's specified probablibity.
+	'''
 
 
 

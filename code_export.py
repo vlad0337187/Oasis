@@ -21,3 +21,4 @@ for key in bpy.data.texts.keys():
 	with open( path_to_text + '/{name}'.format(name=key), 'tw' ) as file_to_write:
 		file_to_write.write( obj.as_string() )
 	print('File {name} was successfully written.'.format(name=key))
+print('All files were written.')
