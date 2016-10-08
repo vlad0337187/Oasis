@@ -33,3 +33,7 @@ px_number_in_pixels = (px_ordinal_number * 4)  # *4 - RGBA (x4 of each color);
 
 
 print('Is in that pixel data?', grass_mask.pixels[px_number_in_pixels])
+
+
+
+scene.addObject('transport_effect', 'Cube_test', 250)

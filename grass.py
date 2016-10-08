@@ -1,29 +1,46 @@
-'''Располагает случайно траву со скытых слоев рядом с активной камерой на земле.
-Запускается раз в 120 секунд по-умолчанию с объекта LogicCube.
+'''Grass placing module.
+Places randomly grass from hidden layer to ground near active camera.
+It launches certain amount of times per second.
+(by default - from "Logic_Cube" object)
 
-Для работы требуется:
-	-объект со свойством "ground" (на котором будет трава рисоваться);
-	-картинка с запеченной текстурой обеъкта или маски с именем "ground_baked" (или сумма всех масок кроме земли, главное знать, на каких областях должна быть трава) (смотрим в каждой маске, начинающейся с ground_alpha, если эта точка нигде не белая - можно рисовать) (в данный момент трава занимает все место на земле, кроме тех, в чиьх масках есть белый цвет).
 
-Алгоритм работы:
-	Всего есть 9 квадратов для размещения травы, игрок всегда находится над центральным, как только он переходит на другой квадрат (не центральный), 
-	тот сразу становится новым центральным квадратом. Лишние квадраты удаляются, новые рисуются, чтобы схема 
-всегда была такой:
+For work needed:
+	-object with "ground" property (better with not False value, but not necessary).
+	 This object must have UV map.
+	-mask of grass to this object (black and white image, white - grass is present, 
+	 black - absent.
+	-add names of objects, on which to place grass, and their mask's names to dict
+	 "grass_masks".
+	-add names of grass objects and possiblity of their appearance to "list grass_objects".
+
+How to work with it:
+	-launch main function of this script every certain amount of time (maybe per second).
+
+
+Way of working:
+	Totally there are 9 squares for placing grass, player is always above the central one,
+	when he'll go into another square (non-central),
+	than those square becomes new central square.
+	Extra squares are removed, new ones are added for scheme to be such:
+		
 	0 0 0
 	0 1 0
-	0 0 0 (1 - место расположения игрока).
+	0 0 0 (1 - place, where the player is).
 	
-	ВЛ ВС ВП
-	СЛ СС СП
-	НЛ НС НП (подписал буквами чтобы было понятней).
-	Squares in English.
+	, or such:
 	tl tm tr
 	ml mm mr
 	bl bm br
+	
+	, but in code they are marked so:
 	1 2 3
 	4 5 6
 	7 8 9
-	С удаляемых квадратов удаляется трава.
+	
+	Grass objects are removed from removed grass.
+	
+	Points, where to place grass, are received by ray down from place,
+	guaranteed above the higest point of ground object.
 	
 	Точки, где рисовать траву получаются пусканием лучей вниз от камеры. Эти лучи также получают u и v координаты точки, куда он упал, на текстуре. Если в этой точке на запеченной текстуре будет зеленый цвет, тогда мы можем расположить там траву. Если нет - то не можем.
 
@@ -33,12 +50,12 @@
 	(пикселей в 4 раза больше: r,g,b,a; и т.д., и все в строку.
 	Нужно будет сопоставлять с шириной и высотой картинки)	
 	
-Revision: 2
+Revision: 4
 '''
 
 import bge
-import random
-
+import random  # for receive_random_uv_coordinates()
+import bpy  # for check_pixel() and grass_masks
 
 
 scene = bge.logic.getCurrentScene()
@@ -60,6 +77,16 @@ squares = {}
 # Коефициент отображает вероятность появления
 grass_objects = [('grass_1_armature', 0.5), ('grass_2_armature', 0.01), ('grass_3_armature', 0.05), ('grass_4_armature', 0.1), ('grass_6_armature', 10), ('grass_dry', 0.1), ('grass_liana', 0.1), ('grass_violent', 0.2)]
 
+grass_masks = {'ground':'ground_grass_mask_v2.png'}  # contains keys: "name_of_ground_object", value "it's mask's name"
+
+
+
+
+
+def grass():
+	'''Main function.
+	If in square is pres
+	'''
 
 
 
@@ -282,14 +309,11 @@ def where_was_the_step():
 
 
 def place_objects(*_squares):
-	for _square in _squares:
-		
-		for _count in range(grass_amount):
-			_coord_x = random.randrange(_square.x + size / 2, _square.x - size / 2, 0.01)
-			_coord_y = random.randrange(_square.y + size / 2, _square.y - size / 2, 0.01)
-			point_from = (_coord_x, _coord_y, height_for_ray)
-			point_to = (_coord_x, _coord_y, 0)
-			answer = obj.rayCast(point_from, point_to, 0, 'ground', 0, 1, 2, 0b1111111111111111)
+	
+	for square in _squares:
+		for count in range(grass_amount):  # grass amount times
+			U_coord, V_coord = receive_random_uv_coordinates(square)
+			
 			if 
 
 
@@ -300,6 +324,33 @@ def what_to_place():
 	It chooses object from the list of availible objects,
 	depending on it's specified probablibity.
 	'''
+
+
+
+def receive_random_uv_coordinates(square):
+	'''Receives random coordinates for grass in specified square.
+	Receives them in UV dimensions (from 0 to 1), not in x and y.
+	'''
+	
+	coord_x = random.randrange(square.x + size / 2, square.x - size / 2, 0.01)
+	coord_y = random.randrange(square.y + size / 2, square.y - size / 2, 0.01)
+	
+	point_from = (coord_x, coord_y, height_for_ray)
+	point_to = (coord_x, coord_y, 0)
+	answer = obj.rayCast(point_from, point_to, 0, 'ground', 0, 1, 2, 0b1111111111111111)
+	
+	U_coord = answer[4][0]
+	V_coord = answer[4][1]
+	
+	return U_coord, V_coord
+
+
+
+def check_pixel(u, v):
+	'''Check appropriate pixel: is it white (is there present grass).
+	Returns: True or False.
+	'''
+
 
 
 
