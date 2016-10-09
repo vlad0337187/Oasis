@@ -53,16 +53,23 @@ Way of working:
 Revision: 4
 '''
 
+
+
 import bge
 import random  # for receive_random_uv_coordinates()
 import bpy  # for check_pixel() and grass_masks
 
 
+
+
+
 scene = bge.logic.getCurrentScene()
-obj = bge.logic.getCurrentController().owner
+
 
 current_camera = scene.active_camera
 camera_position = scene.active_camera.worldPosition
+
+
 
 size = 5  # размер квадрата для помещения травы. Всего их 9 штук, камера всегда находится над центральным.
 grass_amount = 20  # amount of grass objects in one square
@@ -71,13 +78,18 @@ distance_to_change = (square_size / 2) + hysteresis  # расстояние, н�
 height_for_ray = 200  # height, from which ray is casted towards ground for placing grass.
 # No ray - no grass. If ray is below ground - no grass.
 
+
 squares = {}
+
 
 # Список объектов состоит из кортежей: (имя_объекта_травы, коефициент).
 # Коефициент отображает вероятность появления
 grass_objects = [('grass_1_armature', 0.5), ('grass_2_armature', 0.01), ('grass_3_armature', 0.05), ('grass_4_armature', 0.1), ('grass_6_armature', 10), ('grass_dry', 0.1), ('grass_liana', 0.1), ('grass_violent', 0.2)]
 
-grass_masks = {'ground':'ground_grass_mask_v2.png'}  # contains keys: "name_of_ground_object", value "it's mask's name"
+
+grass_masks = {'ground': bpy.data.images.get('ground_baked_v2.png'}  # contains keys: "name_of_ground_object", value: mask image object
+
+
 
 
 
@@ -87,6 +99,7 @@ def grass():
 	'''Main function.
 	If in square is pres
 	'''
+	pass
 
 
 
@@ -312,7 +325,7 @@ def place_objects(*_squares):
 	
 	for square in _squares:
 		for count in range(grass_amount):  # grass amount times
-			U_coord, V_coord = receive_random_uv_coordinates(square)
+			U, V, obj = receive_uv_coordinates(square)  # obj - current ground
 			
 			if 
 
@@ -327,7 +340,7 @@ def what_to_place():
 
 
 
-def receive_random_uv_coordinates(square):
+def receive_uv_coordinates(square):
 	'''Receives random coordinates for grass in specified square.
 	Receives them in UV dimensions (from 0 to 1), not in x and y.
 	'''
@@ -339,17 +352,36 @@ def receive_random_uv_coordinates(square):
 	point_to = (coord_x, coord_y, 0)
 	answer = obj.rayCast(point_from, point_to, 0, 'ground', 0, 1, 2, 0b1111111111111111)
 	
-	U_coord = answer[4][0]
-	V_coord = answer[4][1]
+	U = answer[4][0]
+	V = answer[4][1]
 	
-	return U_coord, V_coord
+	return U, V
 
 
 
-def check_pixel(u, v):
-	'''Check appropriate pixel: is it white (is there present grass).
+def receive_appropriate_pixel_index(U, V):
+	'''Receives index of appropriate to UV coordinates pixel on mask image.
+	Returns int: index of pixel in list of pixels.
+	'''
+	
+	px_horizontal = int(U * mask_width) # we count by proportion
+	px_vertical = int(V * mask_height)  # U - width, V - height
+	
+	px_ordinal_number = (mask_width * (px_vertical - 1)) + px_horizontal  # from 512x512 image
+	pixel_number = (px_ordinal_number * 4)  # *4 - RGBA (x4 of each color);
+	# we don't make -1 because in 0 there is alpha value.
+	
+	return pixel_number
+
+
+
+
+def check_pixel(pixel_number, object_name):
+	'''Check appropriate mask pixel: is it white (is there present grass).
 	Returns: True or False.
 	'''
+	mask = grass_masks['{0}'.format(object_name)]
+	color = mask.pixels[pixel_number]
 
 
 
@@ -389,4 +421,4 @@ def delete_recursive(obj):
 
 
 create_squares()  # при первом запуске модуля
-print('Module "ground_grass" loaded.')
+print('Module "grass.py" loaded.')
