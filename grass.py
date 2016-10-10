@@ -384,9 +384,8 @@ def receive_point(square):
 	'''Receives random point (coordinates) for grass in specified square.
 	Receives them it's UV coordinates (from 0 to 1).
 	'''
-	sequence = 
-	coord_x = random.randrange(squares[square].x + square_size / 2, squares[square].x - square_size / 2, 0.01)
-	coord_y = random.randrange(squares[square].y + square_size / 2, squares[square].y - square_size / 2, 0.01)
+	coord_x = random.choise(humfrange(squares[square].x + square_size / 2, squares[square].x - square_size / 2, 0.01))
+	coord_y = random.choise(humfrange(squares[square].y + square_size / 2, squares[square].y - square_size / 2, 0.01))
 	
 	point_from = (coord_x, coord_y, height_for_ray)
 	point_to = (coord_x, coord_y, 0)

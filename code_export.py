@@ -56,7 +56,7 @@ def write_files():
 	print('Found {0} extra text files. Their names were specified earlier above.'.format(len(extra_texts)))
 
 
-print('\n', 'Script "code export" started.', '\n')
+print('\n\n\n', 'Script "code export" started.', '\n')
 #if __name__ == 'main':  # doesn't work
 check_for_extra_files()
 write_files()

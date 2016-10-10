@@ -59,7 +59,7 @@ Importing module:
 2) Import: import from humanity *
 or: import humanity
 
-Revision: 3
+Revision: 4
 '''
 
 
@@ -109,7 +109,7 @@ def changeIndexes(keys):
 					keys = slice(keys.start - 1, keys.stop, keys.step)
 		
 
-	elif isinstance(keys, int): #если нет 'slice(', значит целое число
+	elif isinstance(keys, int): #если нет slice(), значит int
 	
 		if keys > 0:
 			keys = keys - 1
@@ -124,31 +124,44 @@ def changeIndexes(keys):
 
 
 
-for x in ('list', 'tuple', 'str'):  # __init__ and __new__ methods
-	if x == 'list':
+for name in ('list', 'tuple', 'str'):  # __init__ and __new__ methods
+	if name == 'list':
 		method = '__init__'
 		retn = ''
-	else:
+	else:  # tuple, str
 		method = '__new__'
 		retn = 'return '
 	exec(
-	"""def {x}{method}(self, *something):
+	"""def hum{name}{method}(self, *something):
 		'''('EN') humlist(1,2) > [1, 2]; humlist([1,2]) > [1, 2]; humlist((1,2), (2,3)) > [(1, 2), (2, 3)] 
 		('RU') Подобные есть и в humtuple и в humstr, только называется __new__.
 		'''	
 		
+		classname = 'hum{name}'  # потому что у неизменяемых объектов до создания экземпляра еще нету self.__class__
 		length = len(something)
+		
 		if length > 1:
-			{retn}{x}.{method}(self, something) # возвращать ничего не нужно (для базового класса так)
+			if classname == 'humstr':
+				result = ''
+				for some in something:
+					result += str(some)
+				{retn}{name}.{method}(self, result)  # retn иногда возвращает, иногда - нет
+			else:
+				{retn}{name}.{method}(self, something)
+		
 		elif length == 1:
 			if something[0].__class__ == tuple:
-				{retn}{x}.{method}(self, something[0])
+				{retn}{name}.{method}(self, something[0])  # tuple
 			else:
-				{retn}{x}.{method}(self, something)
-		else:
-			{retn}{x}.{method}(self, something)""".format(x=x, method=method, retn=retn))
+				if classname == 'humstr':
+					{retn}{name}.{method}(self, something[0])  # one element
+				else:
+					{retn}{name}.{method}(self, something)  # tuple with one element
+		
+		else:  # length == 0
+			{retn}{name}.{method}(self, something)""".format(name=name, method=method, retn=retn))
 else:
-	del method, retn, x
+	del method, retn, name
 
 
 
@@ -175,11 +188,11 @@ def sequence_get(self, keys):
 	'''Get method for sequences.
 	Returns value of element on position (keys). If such element is absent - returns None.
 	Used in: humlist, humtuple, humstr.
-	version: 1
+	revision: 1
 	'''
 	try:
 		value = self.__getitem__(keys)
-	except IndexError:
+	except (IndexError, KeyError):
 		value = None
 	return value
 
@@ -187,7 +200,7 @@ def sequence_get(self, keys):
 def sequence_index(self, value, *positions):
 	'''Index method for sequences.
 	Returns index of element with specified value (optional in positions).
-	version: 1
+	revision: 1
 	'''
 	
 	length = len(positions)
@@ -210,6 +223,7 @@ def sequence_index(self, value, *positions):
 
 
 
+
 class humlist(list):
 	'''Class, that is the same to list type, but with normal indexes.
 	version: 2
@@ -217,32 +231,7 @@ class humlist(list):
 
 	# Технические методы:
 	
-	"""def __init__(self, *something):
-		'''('EN') humlist(1,2) > [1, 2]; humlist([1,2]) > [1, 2]; humlist((1,2), (2,3)) > [(1, 2), (2, 3)] 
-		('RU') Подобные есть и в humtuple и в humstr, только называется __new__.'''
-		length = len(something)
-		if length > 1:
-			list.__init__(self, something) # возвращать ничего не нужно (для базового класса так)
-		elif length == 1:
-			if something[0].__class__ == tuple:
-				list.__init__(self, something[0])
-			else:
-				list.__init__(self, something)
-		else:
-			list.__init__(self, something)"""
-	__init__ = list__init__
-			
-	"""try: something[1]; something[0] # если два и более аргумента - else:
-		except IndexError: # если нет двух и более:
-			try: something[0] # если только один аргумент - else:
-			except IndexError: # если ни одного аргумента
-				list.__init__(self, something)
-			else: # если только один аргумент
-				something = something[0]
-				list.__init__(self, something)
-		else: # если два и более аргумента
-			list.__init__(self, something) # возвращать ничего не нужно (для базового класса так)"""
-	
+	__init__ = humlist__init__
 	
 	__getitem__ = sequence__getitem__
 	__setitem__ = sequence__setitem__
@@ -251,13 +240,12 @@ class humlist(list):
 	
 	# Нетехнические методы:
 	
+	index = sequence_index
+	get = sequence_get
+	
 	def insert(self, position, value):
 		position = changeIndexes(position)
 		list.insert(self, position, value)
-	
-	
-	index = sequence_index
-	get = sequence_get
 
 
 
@@ -268,47 +256,19 @@ class humlist(list):
 
 class humtuple(tuple):
 	'''Class, that is the same to tuple type, but with normal indexes.
-	version: 2
+	revision: 2
 	'''
 	
 	# Технические методы:
 	
-	#def __init__(self, something):
-		#У кортежей нет этого метода. Вместо него - __new__. Если добавить __init__ - будут работать оба.
-	
-	"""def __new__(self, *something): #только init не канает. Походу он вообще тут не работает.
-		'''('EN') Analog to __init__ method in humlist class
-		('RU') Но они не одинаковы - у каждого свои нюансы.'''
-		try: something[1]; something[0] # если два и более аргумента - else:
-		except IndexError: # если нет двух и более:
-			try: something[0] # если только один аргумент - else:
-			except IndexError: # если ни одного аргумента
-				return tuple.__new__(self, something)
-			else: # если только один аргумент
-				something = something[0]
-				return tuple.__new__(self, something)
-		else: # если два и более аргумента
-			return tuple.__new__(self, something) # возвращать ничего не нужно (для базового класса так)"""
-	__new__ = tuple__new__
+	__new__ = humtuple__new__  # у неизменяемых типов только __new__() метод
 	
 	
-	def __getitem__(self, keys):
-		'''('EN') Analog to similar method in humlist class'''
-		keys = changeIndexes(keys)
-		return tuple.__getitem__(self, keys)
+	__getitem__ = sequence__getitem__
+	__setitem__ = sequence__setitem__
+	__delitem__ = sequence__delitem__
 	
 	
-	def __setitem__(self, keys, value):
-		'''('EN') Analog to similar method in humlist class'''
-		keys = changeIndexes(keys)
-		return tuple.__setitem__(self, keys, value)#второй аргумент просит итерируемый объект вида: (slice(1,2,1), ) или (1, )
-	
-	
-	def __delitem__(self, keys):
-		'''('EN') Analog to similar method in humlist class'''
-		keys = changeIndexes(keys)
-		return tuple.__delitem__(self, keys)
-		
 	# Нетехнические методы:
 		
 	index = sequence_index
@@ -326,50 +286,23 @@ class humstr(str):
 	version: 2
 	'''
 	
-	# Технические методы:
+	# Технические методы:	
 	
-	#def __init__(self, something):
-		#У кортежей нет этого метода. Вместо него - __new__. Если добавить __init__ - будут работать оба.
+	__new__ = humstr__new__
 	
-	
-	def __new__(self, *something): #только init не канает. Походу он вообще тут не работает.
-		'''('EN') Analog to __init__ method in humlist class
-		('RU') Но они не одинаковы - у каждого свои нюансы.'''
-		try: something[1]; something[0] # если два и более аргумента - else:
-		except IndexError: # если нет двух и более:
-			try: something[0] # если только один аргумент - else:
-			except IndexError: # если ни одного аргумента
-				return str.__new__(self)
-			else: # если только один аргумент
-				something = something[0]
-				return str.__new__(self, something)
-		else: # если два и более аргумента
-			return str.__new__(self, something) # возвращать ничего не нужно (для базового класса так)
-	
-	
-	def __getitem__(self, keys):
-		'''('EN') Analog to similar method in humlist class'''
-		keys = changeIndexes(keys)
-		return str.__getitem__(self, keys)
-	
-	
-	def __setitem__(self, keys, value):
-		'''('EN') Analog to similar method in humlist class'''
-		keys = changeIndexes(keys)
-		return str.__setitem__(self, keys, value)#второй аргумент просит итерируемый объект вида: (slice(1,2,1), ) или (1, )
-	
-	
-	def __delitem__(self, keys):
-		'''('EN') Analog to similar method in humlist class'''
-		keys = changeIndexes(keys)
-		return str.__delitem__(self, keys)
+	__getitem__ = sequence__getitem__
+	__setitem__ = sequence__setitem__
+	__delitem__ = sequence__delitem__
 	
 	
 	# Нетехнические методы:
 	
+	index = sequence_index
+	get = sequence_get
+	
 	def find(self, value):
 		return str.find(self, value) + 1
-	# rfind и так возвращает правильное значение
+	# (rfind и так возвращает правильное значение)
 	
 	
 	def rindex(self, value, *positions):
@@ -393,9 +326,6 @@ class humstr(str):
 			return str.format(self, '', *args, **kwargs)
 		else:
 			return str.format(self, **kwargs)
-		
-	index = sequence_index
-	get = sequence_get
 
 
 
@@ -405,15 +335,10 @@ class humstr(str):
 
 
 class humdict(dict):
-	def get(self, key):
-		'''Returns value of element on name (key). If such element is absent - returns None.
-		Used in: dict. (variant for sequences is named sequence_get)
-		'''
-		try:
-			value = self.__getitem__(key)
-		except KeyError:
-			value = None
-		return value
+	'''Same as dict, but with .get() method.
+	'''
+	
+	get = sequence_get  # it's appropriate
 
 
 
@@ -487,3 +412,4 @@ def humfrange(a, b, step):
 			yield a
 			break
 		return
+
