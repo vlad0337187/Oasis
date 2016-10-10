@@ -5,7 +5,10 @@
 Требует:
     - наличие арматуры ружья с именем gun_armature;
     - наличие указанных в функциях анимаций.
-    
+
+Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+License: CC-BY. To use this under other license contact author.
+
 Revision: 15
 '''
 

@@ -3,7 +3,10 @@
 На нужном объекте добавляем сенсор Delay с контроллером Python, тип - модуль.
 Далее запускаем нужную функцию.
 
-Версия: 2
+Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+License: CC-BY. To use this under other license contact author.
+
+Revision: 3
 '''
 
 import bge

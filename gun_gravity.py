@@ -10,6 +10,9 @@
 	
 Объекты, с которыми должна работать гравитационная пушка, должны иметь свойство с именем "gravity".
 
+Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+License: CC-BY. To use this under other license contact author.
+
 Revision: 25
 '''
 

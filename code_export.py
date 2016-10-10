@@ -2,6 +2,9 @@
 Also it checks: are there extra files in "path_to_text" directory
 and shows their names.
 
+Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+License: CC-BY. To use this under other license contact author.
+
 Revision: 2
 '''
 folder_to_copy = '../../../code-upbge'

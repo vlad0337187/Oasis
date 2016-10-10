@@ -10,7 +10,10 @@
 		-с именем custom (этот актуатор также должен быть соединен с Always через and)
 	-должен запускаться при нажатии клавиш: W, A, S, D, LShift, Space.
 
-Версия: 7 (UPBGE)
+Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+License: CC-BY. To use this under other license contact author.
+
+Revision: 8
 
 Что сделать:
 	-ничего

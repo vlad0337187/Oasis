@@ -1,4 +1,7 @@
-// Версия: 1
+// Revision: 1
+// Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+// License: CC-BY. To use this under other license contact author.
+
 uniform sampler2D bgl_RenderedTexture;
 vec2 texCoord = gl_TexCoord[0].st;
 

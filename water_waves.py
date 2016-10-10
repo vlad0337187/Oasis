@@ -2,6 +2,7 @@
 Fro work needs a plain with verticles.
 
 Source: https://blenderartists.org/forum/showthread.php?305608-Realtime-Mesh-Water-Waves%28No-animations-required%29 (26 Aug 2016)
+Author: coreystj
 '''
 
 import bge

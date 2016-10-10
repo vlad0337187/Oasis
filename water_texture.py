@@ -1,3 +1,6 @@
+# Author: Martins Upitis (martinsh) (devlog-martinsh.blogspot.com)
+
+
 from bge import logic as g
 from bge import texture
 from mathutils import *

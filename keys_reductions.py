@@ -2,7 +2,10 @@
 
 Может использоваться всеми модулями, которые обрабатывают нажатия клавиш.
 
-Версия: 2
+Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+License: CC-BY. To use this under other license contact author.
+
+Revision: 3
 '''
 
 import bge

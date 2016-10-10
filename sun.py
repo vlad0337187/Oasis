@@ -1,8 +1,12 @@
-'''Вычисляет: на какую точку передней части объектива камеры попадает луч от солнца.
-Нужна для правильной работы шейдера (2д фильтра) "filter_light_scattering.glsl".
+'''
+Calculates the Sun position on display (x and y coordinates if it's on display, False if not).
+It's used to point 2d glsl filter "filter_light_scattering.glsl" to right sun position.
+Calculated position is written into 'x' and 'y' properties of owner object.
 
-Требует:
-	-наличие объекта солнца с именем "Sun".
+Also has function to turn on and off light scattering actuators (scattering() ).
+
+Needs:
+	- presence of sun object with name "Sun".
 	-наличие объекта пустышки камеры (камера - потомок) с именем "player_camera_empty"
 	(именно пустышки, ведь у камеры неправильные локальные координаты).
 	-наличие объекта активной камеры.
@@ -16,8 +20,12 @@ Kogda solnce popadaet v kameru, vkliuchaem sheider, postepenno uvelichivaem ves 
 Kogda solnce perestaet popadat v kameru, postepenno umenshiaem ves luchei.
 Kogda luchi budut <= 0, vykliuchaem sheider.
 
-Версия: v2
+Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
+License: CC-BY. To use this under other license contact author.
+
+Revision: 3
 '''
+
 
 import bge
 from math import *  # for translating radians to degrees
@@ -39,15 +47,16 @@ contr = bge.logic.getCurrentController()
 
 def scattering():
 	'''This is the main function, which is called time to time from object.
-	It calles all other functions.
+	It calles all other functions and rules "filter_light_scattering.glsl".
+	v2
 	'''
 	if scattering_on_off():
 		if not scene.filterManager.getFilter(10):
 			contr.activate('scattering')
 		if camera_empty['weight'] < weight_backup:
 			camera_empty['weight'] += step
-		change_screen_x_coordinates()
-		change_screen_y_coordinates()
+		calculate_sun_x_coordinates()
+		calculate_sun_y_coordinates()
 	else:
 		if camera_empty['weight'] > 0.0:
 			camera_empty['weight'] -= step
@@ -67,7 +76,7 @@ def refresh_camera():
 
 
 def scattering_on_off():
-	'''Vozvrachaet True esli solnce ne bolshe chem na 90 gradusov ot camery otvernulos.
+	'''Vozvrachaet True esli solnce ne bolshe chem na 180 gradusov ot camery otvernulos.
 	(ranshe bylo: Vozvrachaet True esli solnce popadaet v obiektiv)
 	'''
 	#global camera_empty
@@ -84,7 +93,7 @@ def scattering_on_off():
 	#print(weight_backup, camera_empty['weight'])
 
 
-def change_screen_x_coordinates():
+def calculate_sun_x_coordinates():
 	'''
 	1. Puskaem vektor (lokalnyi, tak kak kamera vertitsia) ot camery do solnca.
 	2. Poluchaem Y vektora (X displeia kamery).
@@ -102,7 +111,7 @@ def change_screen_x_coordinates():
 	#print('x = ', x)
 
 
-def change_screen_y_coordinates():
+def calculate_sun_y_coordinates():
 	'''
 	1. Puskaem vektor (lokalnyi, tak kak kamera vertitsia) ot camery do solnca.
 	2. Poluchaem Z vektora.
