@@ -13,7 +13,7 @@
 Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
 License: CC-BY. To use this under other license contact author.
 
-Revision: 25
+Revision: 26
 '''
 
 
@@ -29,8 +29,9 @@ cont = bge.logic.getCurrentController()
 
 
 
-target = None
+target = None  # target object, which'll be pulled, throwed
 pulled = False
+semi_transparent = False  # is target semi-transparent
 globalDict = bge.logic.globalDict
 globalDict['pulled'] = False # для модуля анимации (может и других)
 globalDict['target'] = None  # для модуля анимации (может и других)
@@ -63,6 +64,7 @@ def gravity():
 			if target != None:
 				if crosshair.getDistanceTo(target) <= pulling_distance:  # расстояние, на котором можно "схватить" объект
 					pull()
+					make_semi_transparent()
 		elif pulled == True:
 			if not check_is_bareer_for_throwing_present():
 				throw()
@@ -75,6 +77,7 @@ def gravity():
 			if target != None:
 				if crosshair.getDistanceTo(target) <= pulling_distance:  # расстояние, на котором можно "схватить" объект
 					pull()
+					make_semi_transparent()
 					create_point_for_transporting()
 		elif pulled == True:
 			create_point_for_transporting()  # чтобы потом удалить если нет и не было ошибки
@@ -322,3 +325,57 @@ def stop_object():
 	target.setLinearVelocity([0, 0, 0], False)
 
 
+
+transparent_fragment_shader = """
+   uniform float cutoff;
+
+   varying vec4 texCoords; 
+      // interpolated texture coordinates for this fragment
+   uniform sampler2D textureUnit; 
+      // a small integer identifying a texture image
+ 
+   void main()
+   {
+      vec2 longitudeLatitude = vec2(
+         (atan(texCoords.y, texCoords.x) / 3.1415926 + 1.0) * 0.5, 
+         1.0 - acos(texCoords.z) / 3.1415926);
+         // processing of the texture coordinates; 
+         // this is unnecessary if correct texture coordinates 
+         // are specified within Blender
+ 
+      gl_FragColor = texture2D(textureUnit, longitudeLatitude);
+
+      if (gl_FragColor.a < cutoff)
+         // alpha value less than user-specified threshold?
+      {
+         discard; // yes: discard this fragment
+      }
+   }
+"""
+
+transparent_vertex_shader = """
+   varying vec4 texCoords; // texture coordinates at this vertex
+ 
+   void main()
+   {
+      texCoords = gl_MultiTexCoord0; // in this case equal to gl_Vertex
+      gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+   }
+"""
+
+
+def make_semi_transparent():
+	'''Makes pulled object semi-transparent.
+	rev.1
+	'''
+	mesh = target.meshes[0]
+	for mat in mesh.materials:
+		#mat.alpha = 0.5
+		shader = mat.getShader()
+		if shader != None:
+			if not shader.isValid():
+				shader.setSource(transparent_fragment_shader, transparent_vertex_shader, True)
+				shader.setSampler('textureUnit', 0)
+				shader.setUniform1f('cutoff', cont.owner.get('cutoff'))
+				# get the first texture channel of the material
+				#shader.setSampler('texture_0', 0)

@@ -6,12 +6,16 @@
 Author: Vladislav Naumov. naumovvladislav@list.ru; github.com/vlad1777d; vk.com/naumovvladislav
 License: CC-BY. To use this under other license contact author.
 
-Revision: 3
+Revision: 4
 '''
 
 import bge
 import random
 
+
+def get_random_multipling_number():
+	multipling_number = random.choice((0.8, 0.9, 1.0, 1.1, 1.2, 1.3))
+	return multipling_number
 
 
 def get_object():
@@ -24,22 +28,22 @@ def get_object():
 
 def grass_main_armature():
 	number, obj = get_object()
-	obj.playAction('grass_main_wind', 1, 120, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, layer_weight=0.0, ipo_flags=0, speed=1 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
+	obj.playAction('grass_main_wind', 1, 120, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, layer_weight=0.0, ipo_flags=0, speed=0.3 * get_random_multipling_number(), blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
 
 
 def grass_violent():
 	number, obj = get_object()
-	obj.playAction('grass_violent_wind', 1, 122, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_PING_PONG, layer_weight=0.0, ipo_flags=0, speed=1 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
+	obj.playAction('grass_violent_wind', 1, 122, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_PING_PONG, layer_weight=0.0, ipo_flags=0, speed=1.8 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
 	
 	
 def grass_liana():
 	number, obj = get_object()
-	obj.playAction('grass_liana_wind', 1, 146, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_PING_PONG, layer_weight=0.0, ipo_flags=0, speed=1 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
+	obj.playAction('grass_liana_wind', 1, 146, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_PING_PONG, layer_weight=0.0, ipo_flags=0, speed=1.5 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
 	
 	
 def grass_dry():
 	number, obj = get_object()
-	obj.playAction('grass_dry_wind', 1, 160, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_PING_PONG, layer_weight=0.0, ipo_flags=0, speed=1 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
+	obj.playAction('grass_dry_wind', 1, 160, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_PING_PONG, layer_weight=0.0, ipo_flags=0, speed=1.5 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
 	
 	
 def grass_1_armature():
@@ -52,9 +56,9 @@ def grass_2_armature():
 	obj.playAction('grass_2_wind', 1, 121, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, layer_weight=0.0, ipo_flags=0, speed=1 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
 	
 	
-def grass_3_armature():
+def grass_3_4_armature():
 	number, obj = get_object()
-	obj.playAction('grass_3_wind', 1, 121, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, layer_weight=0.0, ipo_flags=0, speed=1 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
+	obj.playAction('grass_3_4_wind', 1, 121, layer=0, priority=1, blendin=0, play_mode=bge.logic.KX_ACTION_MODE_LOOP, layer_weight=0.0, ipo_flags=0, speed=1 + number, blend_mode=bge.logic.KX_ACTION_BLEND_BLEND)
 	
 	
 def grass_4_armature():

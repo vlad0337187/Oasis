@@ -12,8 +12,8 @@ float exp = 0.05; // Exposure
 
 // Light Screen (Origin if effect is not working Play with X & Y)
 
-uniform float x; // 0.0 - 1.0
-uniform float y; // 0.0 - 1.0
+uniform float sun_x; // 0.0 - 1.0
+uniform float sun_y; // 0.0 - 1.0
 
 uniform vec2 lightScreenPos;
 
@@ -28,7 +28,7 @@ void main()
     vec4 sample = vec4(0);
     vec4 mask = vec4(0);
 
-    vec2 lightScreenPos = vec2(x,y);
+    vec2 lightScreenPos = vec2(sun_x,sun_y);
 
     vec2 deltaTexCoord = vec2(gl_TexCoord[0]) - lightScreenPos;
 	vec2 texCoo = gl_TexCoord[0].st;

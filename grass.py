@@ -53,7 +53,7 @@ Way of working:
 Author: Vladislav Naumov. naumovvladislav@list.ru; https://github.com/vlad1777d; https://vk.com/naumovvladislav
 License: CC-BY. To use this under other license contact author.
 
-Revision: 8
+Revision: 11
 '''
 '''
 What to do:
@@ -68,7 +68,9 @@ import bge
 import random  # for receive_random_uv_coordinates()
 import bpy  # for check_pixel() and grass_masks
 from humanity import *  # for receive_point() for random.choise()
-import array  # for converting masks transform_grass_masks_to_arrays()
+import array  # for converting masks with transform_grass_masks_to_arrays()
+from mathutils import Euler, Vector  # for vectors for normal_to_xyz_rot()
+import math  # for calculating rotation in normal_to_xyz_rot()
 
 
 
@@ -82,21 +84,25 @@ current_camera = scene.active_camera
 
 
 
-square_size = 1  # размер квадрата для помещения травы. Всего их 9 штук, камера всегда находится над центральным.
-hysteresis = 0.3  # размер, на который нужно пройти больше расстояние за границу квадрата, чтобы поменять квадраты. Нужен для того чтобы не было рывков и постоянных подгрузок, если персонаж стоит на краю и ходит туда-сюда.
+square_size = 20  # размер квадрата для помещения травы. Всего их 9 штук, камера всегда находится над центральным.
+hysteresis = 0.4  # размер, на который нужно пройти больше расстояние за границу квадрата, чтобы поменять квадраты. Нужен для того чтобы не было рывков и постоянных подгрузок, если персонаж стоит на краю и ходит туда-сюда.
 distance_to_change = (square_size / 2) + hysteresis  # расстояние, на которое должен ГГ пройти чтобы поменялись квадраты
 #distance_to_change = square_size
 height_for_ray = 200  # height, from which ray is casted towards ground for placing grass. No ray - no grass. If ray is below ground - no grass.
-grass_amount = 1  # amount of grass objects in one square
+grass_amount = 40  # amount of grass objects in one square
 
 
 squares = {}  # dict with square objects
 
 
 # Список объектов состоит из кортежей: (имя_объекта_травы, коефициент). Коефициент отображает вероятность появления
-grass_objects = [('grass_1_armature', 5), ('grass_2_armature', 1), ('grass_3_armature', 5), ('grass_4_armature', 10), ('grass_6_armature', 100), ('grass_dry', 10), ('grass_liana', 5), ('grass_violent', 5)]
+grass_objects = [('grass_main_armature.002', 100), ('grass_1_armature', 5), ('grass_2_armature', 1), ('grass_3_4_armature', 5), ('grass_4_armature', 10), ('grass_6_armature', 10), ('grass_dry', 10), ('grass_liana', 5), ('grass_violent', 5)]
 
 grass_with_accounted_probabilities = tuple((x for x, y in grass_objects for i in range(y)))  # calculated automatically. Format: ['o1', 'o1', 'o1', 'o2', 'o2']. Amount of objects equals on possiblity of their appearance. Than object is chosen automatically with random int from 0 to amount of objects.
+
+# here are the objects, which will rotate according to the ground's slope
+# (it's normal in that point)
+grass_objects_align_to_ground_slope = ['grass_main_armature.002']
 
 
 grass_masks = {'ground': bpy.data.images.get('ground_grass_mask_v2.png')}  # contains keys: "name_of_ground_object", value: mask image object
@@ -195,6 +201,7 @@ def change_squares():
 	Если передвинулся в сторону любую больше чем на 5 метров, тогда убираем лишние квадраты и рисуем недостающие.
 	rev1
 	'''
+	global squares
 	print('change_squares()')
 	step = where_was_the_step()
 	print('step was to {0}'.format(step))
@@ -375,27 +382,34 @@ def where_was_the_step():
 def place_objects(*_squares):
 	'''Places randomly chosen grass objects into randomly chosen places
 	in given squares.
-	rev. 1
+	rev. 2
 	'''	
 	print('place_objects() started')
 	for square_number in _squares:
 		
 		for count in range(grass_amount):
-			point, U, V, ground = receive_point(square_number)
+			ground_obj, U, V, point, normal  = receive_point(square_number)
 			#point = (-21.23577, 23.35219, 32.67959)
 			#U = 0.5; V = 0.5; ground = scene.objects['ground']
+			print('hitnormal =', normal)
 			
-			if ground:
-				print('ground')
-				pixel_number = receive_pixel_number(U, V, ground)
+			if ground_obj:
+				#print('ground')
+				pixel_number = receive_pixel_number(U, V, ground_obj)
 				#color = check_pixel(pixel_number, ground)
-				if check_pixel(pixel_number, ground):
+				if check_pixel(pixel_number, ground_obj):
 					#print('True')
 					grass = what_to_place()
 					added = scene.addObject(grass)
 					added.worldPosition = point
-					squares[square_number].objects.append(added)
+					if str(grass) in grass_objects_align_to_ground_slope:
+						added.worldOrientation = normal_to_xyz_rot(normal)
 					
+					random_rot_value = random.choice((0.7, 0.8, 0.9, 1.0, 1.1, 1.2))
+					random_scale_value = random.choice((0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3))
+					#added.worldOrientation.rotate(Euler((0, 0 ,0.1 * random_rot_value)))
+					added.worldScale = Vector((1 * random_scale_value, 1 * random_scale_value, 1 * random_scale_value))
+					squares[square_number].objects.append(added)
 					#queue('store', (grass, point, square_number))
 					#print('added something')
 			
@@ -413,24 +427,28 @@ def what_to_place():
 	return grass_with_accounted_probabilities[number]
 
 
-def receive_point(number):
+def receive_point(square_number):
 	'''Receives random point (coordinates) for grass in specified square.
 	Receives them it's UV coordinates (from 0 to 1).
 	'''
-	coord_x = random.choice(drange(str(squares[number].x - square_size / 2), str(squares[number].x + square_size / 2), '0.01', 'float'))
-	coord_y = random.choice(drange(str(squares[number].y - square_size / 2), str(squares[number].y + square_size / 2), '0.01', 'float'))
+	coord_x = random.choice(drange(str(squares[square_number].x - square_size / 2), str(squares[square_number].x + square_size / 2), '0.01', 'float'))
+	coord_y = random.choice(drange(str(squares[square_number].y - square_size / 2), str(squares[square_number].y + square_size / 2), '0.01', 'float'))
 	#coord_x = 0; coord_y = 0
+	#print('coord_x =', coord_x, 'coord_y =', coord_y)
+	#print('height_for_ray =', height_for_ray)
 	
 	point_from = (coord_x, coord_y, height_for_ray)
 	point_to = (coord_x, coord_y, 0)
-	answer = owner.rayCast(point_from, point_to, 0, 'ground', 0, 1, 2, 0b1111111111111111)  # owner because some object needs to be there
+	answer = owner.rayCast(point_from, point_to, 0, 'ground', 1, 1, 2, 0b1111111111111111)  # owner because some object needs to be there
 	
-	U = answer[4][0]
-	V = answer[4][1]
-	obj = answer[0]
-	point = answer[1]
+	if answer[4]:  # can be None >> error "'NoneType' object is not subscriptable"
+		U = answer[4][0]
+		V = answer[4][1]
+	else:
+		U, V = None, None
+	ground_obj, point, normal = answer[0], answer[1], answer[2]
 	
-	return point, U, V, obj
+	return ground_obj, U, V, point, normal
 
 
 def receive_pixel_number(U, V, ground):
@@ -461,6 +479,76 @@ def check_pixel(pixel_number, ground):
 	return color_0_1
 
 
+def normal_to_xyz_rot(normal):
+	'''Transforms unit-vector (with length 1) of normal
+	into XYZ rotation angles.
+	Positive rotation - by clock arrow.
+	Normal orientation of projection - when that axis, that is ortogonal for
+	user is it's "-" side to user, "+" side away (except the X axis!!! It's blender's feature.
+	Example:
+        ^ Z                      ^ Z              ^ Y
+        |                        |                |
+        |                        |                |
+        |                        |                |
+        |                        |                |
+		O----> X         Y <-----O        X <-----O
+	(+Y looks away)  (+X looks away)  (+Z looks away)
+	rev.4
+	'''
+	if normal.z > 0:
+		if normal.y > 0:
+			rot_x = - math.degrees(math.atan(normal.y / normal.z))
+			# here ^ must be "+", but there's an issue (look func. description)
+		elif normal.y < 0:
+			rot_x =  math.degrees(math.atan((- normal.y) / normal.z))
+			# here ^ must be "-", but there's an issue (look func. description)
+		else:
+			rot_x = 0
+		
+		if normal.x > 0:
+			rot_y = math.degrees(math.atan(normal.x / normal.z))
+		elif normal.x < 0:
+			rot_y = - math.degrees(math.atan((- normal.x) / normal.z))
+		else:
+			rot_y = 0
+		
+	elif normal.z < 0:
+		if normal.y > 0:
+			rot_x = -90 - math.degrees(math.atan(- normal.z / normal.y))
+		elif normal.y < 0:
+			rot_x = -180 - math.degrees(math.atan(- normal.y / - normal.z))
+		else:
+			rot_x = 180
+		
+		if normal.x > 0:
+			rot_y = 90 + math.degrees(math.atan(- normal.z / normal.x))
+		elif normal.x < 0:
+			rot_y = 180 + math.degrees(math.atan(normal.x / normal.z))
+		else:
+			rot_y = 180
+	
+	else:
+		if normal.y > 0:
+			rot_x = -90
+		elif normal.y < 0:
+			rot_x = 90
+		else:
+			rot_x = 0
+		
+		if normal.x > 0:
+			rot_y = 90
+		elif normal.x < 0:
+			rot_y = -90
+		else:
+			rot_y = 0
+	
+	rot_x = math.radians(rot_x)
+	rot_y = math.radians(rot_y)
+	rot_z = 0  # we do not need to rotate z axis
+	rot = Euler((rot_x, rot_y, rot_z))
+	return rot
+
+
 
 
 
@@ -480,7 +568,7 @@ def remove_objects(*_squares):
 	for number in _squares:
 		if not len(squares[number].objects):  # no grass in cell
 			print('remove_objects(): Squares with grass are empty!')
-			return
+			continue
 		else:  # grass is present
 			#queue.freeze = True
 			for count in range(len(squares[number].objects)):
@@ -560,13 +648,13 @@ def transform_grass_masks_to_arrays():
 	grass_masks_copy = grass_masks.copy()
 	
 	for key in grass_masks_copy:
-		print('key:', key)
+		#print('key:', key)
 		mask_array = array.array('b')
 		pixels = grass_masks[key].pixels
 		length = len(pixels)
 		index = 1
 		for count in humrange(1, length // 4):
-			print('count =', count)
+			#print('count =', count)
 			pixel = pixels[index]
 			if pixel >= 0.9:
 				mask_array.append(1)

@@ -16,6 +16,9 @@ Needs:
 better to hang this module to mousemove sensor - it moves camera (than there will not be extra launches).
 Also it's needed to add Delay-0 sensor to launch it on startup.
 
+When sun goes closer to the center of camera - values x and y get closer to 0.0.
+WHen sun goes to the border of camera - closer to 1.0.
+
 Kogda solnce popadaet v kameru, vkliuchaem sheider, postepenno uvelichivaem ves luchei.
 Kogda solnce perestaet popadat v kameru, postepenno umenshiaem ves luchei.
 Kogda luchi budut <= 0, vykliuchaem sheider.
@@ -62,7 +65,18 @@ def scattering():
 			camera_empty['weight'] -= step
 		elif camera_empty['weight'] <= 0.0:
 			if scene.filterManager.getFilter(10):
-				contr.activate('remove_scattering')		
+				contr.activate('remove_scattering')
+
+
+
+def position():
+	'''Calculates sun position for different shadows.
+	Writes to sun_x and sun_y coordinates.
+	'''
+	#print('position()')
+	if scattering_on_off():
+		calculate_sun_x_coordinates()
+		calculate_sun_y_coordinates()
 
 
 
@@ -107,7 +121,7 @@ def calculate_sun_x_coordinates():
 	#x += 0.5  # 0.5 eto celaia vysota (1) delim na 2
 	# in UPBGE not needed - we count from edge of screen
 	
-	camera_empty['x'] = x
+	camera_empty['sun_x'] = x
 	#print('x = ', x)
 
 
@@ -125,10 +139,12 @@ def calculate_sun_y_coordinates():
 	#y += 0.5  # 0.5 eto celaia vysota (1) delim na 2
 	# in UPBGE not needed - we count from edge of screen
 	
-	camera_empty['y'] = y
+	camera_empty['sun_y'] = y
 	#print('y = ', y)
 	
 	
 	
 	
-scattering()
+#scattering()
+position()  # first launch
+#print("SUN POSITION LOADED")

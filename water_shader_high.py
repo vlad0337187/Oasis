@@ -48,9 +48,9 @@ uniform sampler2D reflectionSampler,refractionSampler,normalSampler;
 //tweakables
 
 vec2 windDir = vec2(0.0, -0.5); //wind direction XY
-float windSpeed = 1.2; //wind speed
+float windSpeed = 0.9; //wind speed
 
-float scale = 800.0; //overall wave scale
+float scale = 9500.0; //overall wave scale
 
 /*vec2 bigWaves = vec2(0.6, 2.6); //strength of big waves, def: (2.0, 3.0)
 vec2 midWaves = vec2(4.0, 2.0); //strength of middle sized waves, def: (4.0, 2.0)
@@ -58,19 +58,19 @@ vec2 smallWaves = vec2(3.0, 2.5); //strength of small waves, def: (1.0, 0.5)*/
 
 vec2 bigWaves = vec2(0.1, 0.8);
 vec2 midWaves = vec2(0.6, 0.2);
-vec2 smallWaves = vec2(0.4, 0.2);
+vec2 smallWaves = vec2(1.0, 0.2);
 
-vec3 waterColor = vec3(0.25,0.3,0.35); //color of the water vec3(0.2,0.3,0.35)
-float waterDensity = 1.0; //water density (0.0-1.0)
+vec3 waterColor = vec3(0.25,0.3,0.45); //color of the water vec3(0.2,0.3,0.35)
+float waterDensity = 0.9; //water density (0.0-1.0)
     
-float choppy = 0.3; //wave choppyness // was 0.25
+float choppy = 0.25; //wave choppyness // was 0.25
 float aberration = 0.002; //chromatic aberration amount
-float bump = 3.0; //overall water surface bumpyness
+float bump = 1.2; //overall water surface bumpyness
 float reflBump = 0.3; //reflection distortion amount
 float refrBump = 0.4; //refraction distortion amount
 
 vec3 sunPos = vec3(500.0,500.0,200.0); //sun position
-float sunSpec = 250.0; //Sun specular hardness
+float sunSpec = 30.0; //Sun specular hardness
 
 float scatterAmount = 1.0; //amount of sunlight scattering of waves
 vec3 scatterColor = vec3(0.1,0.13,0.1);// color of the sunlight scattering
