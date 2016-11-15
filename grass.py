@@ -53,14 +53,12 @@ Way of working:
 Author: Vladislav Naumov. naumovvladislav@list.ru; https://github.com/vlad1777d; https://vk.com/naumovvladislav
 License: CC-BY. To use this under other license contact author.
 
-Revision: 11
-'''
-'''
 What to do:
-	- change module to use scene.active_camera directly and remove active camera's variable and refresh_camera() function.
-	- correct randrange
-	- дописать функции reset() которые убирают все объекты травы, удаляют все квадраты и запускают модуль заново (на случай, если камера переместится на несколько клеток вперед).
+	-make corrections from vk.com
+
+Revision: 12
 '''
+
 
 
 
@@ -79,16 +77,13 @@ scene = bge.logic.getCurrentScene()
 owner = bge.logic.getCurrentController().owner  # for receive_uv() for .rayCast()
 
 
-current_camera = scene.active_camera
-#camera_position = scene.active_camera.worldPosition
 
 
-
-square_size = 20  # размер квадрата для помещения травы. Всего их 9 штук, камера всегда находится над центральным.
+square_size = 25  # размер квадрата для помещения травы. Всего их 9 штук, камера всегда находится над центральным.
 hysteresis = 0.4  # размер, на который нужно пройти больше расстояние за границу квадрата, чтобы поменять квадраты. Нужен для того чтобы не было рывков и постоянных подгрузок, если персонаж стоит на краю и ходит туда-сюда.
 distance_to_change = (square_size / 2) + hysteresis  # расстояние, на которое должен ГГ пройти чтобы поменялись квадраты
 #distance_to_change = square_size
-height_for_ray = 200  # height, from which ray is casted towards ground for placing grass. No ray - no grass. If ray is below ground - no grass.
+height_for_ray = 10  # height, from which ray is casted towards ground for placing grass. camera position height is added to this value
 grass_amount = 40  # amount of grass objects in one square
 
 
@@ -106,14 +101,19 @@ grass_objects_align_to_ground_slope = ['grass_main_armature.002']
 
 
 grass_masks = {'ground': bpy.data.images.get('ground_grass_mask_v2.png')}  # contains keys: "name_of_ground_object", value: mask image object
-grass_masks['ground'] = bpy.data.images.get('ground_grass_mask_v3.png')
+#grass_masks['ground'] = bpy.data.images.get('ground_grass_mask_v3.png')
 
 masks_sizes = {k:(v.size[0], v.size[1]) for k, v in grass_masks.items()}  # calculated automatically. Key - name of object, value - tuple of it's width and height
 
 
 
+
+
+
+
+
 # for TESTING only
-def print_grass():
+def print_grass():  # not used now
 	print('Current grass:\n',
 	'Square 1 objects(total: {0}):'.format(len(squares[1].objects)), squares[1].objects,
 	'Square 2 objects(total: {0}):'.format(len(squares[2].objects)), squares[2].objects,
@@ -132,7 +132,7 @@ def print_grass():
 
 
 
-def grass():
+def grass():  # not used now
 	'''Main function.
 	Please, use change_squares() instead of it.
 	'''
@@ -154,15 +154,6 @@ class cell():
 
 
 
-def refresh_camera():
-	'''Указывает данному модулю на текущую камеру.
-	(нужно если таковая была изменена во время игры) (v1)
-	'''
-	global current_camera, camera_position
-	current_camera = scene.active_camera
-	camera_position = current_camera.WorldPosition
-
-
 
 
 
@@ -175,7 +166,7 @@ def create_squares():
 	Объект травы - либо меш, либо объект арматуры, на который прикреплен меш.
 	rev1
 	'''
-	print('create_squares()')
+	#print('create_squares()')
 	global squares
 	
 	squares[5] = cell(scene.active_camera.worldPosition)  # creates first, as other depend on it
@@ -191,7 +182,7 @@ def create_squares():
 	squares[9] = cell((squares[5].x - square_size, squares[5].y - square_size))
 	
 	place_objects(1, 2, 3, 4, 5, 6, 7, 8, 9)
-	print('create_squares() finished')
+	#print('create_squares() finished')
 
 
 
@@ -202,9 +193,9 @@ def change_squares():
 	rev1
 	'''
 	global squares
-	print('change_squares()')
+	#print('change_squares()')
 	step = where_was_the_step()
-	print('step was to {0}'.format(step))
+	#print('step was to {0}'.format(step))
 	
 	if step == 1:  # вверх-влево
 		remove_objects(3, 6, 7, 8, 9)  # before new links will created
@@ -336,7 +327,11 @@ def change_squares():
 		
 		place_objects(3, 6, 7, 8, 9)
 	
-	print('change_squares() finished')
+	elif step == 10:  # step was too large
+		remove_objects(1, 2, 3, 4, 5, 6, 7, 8, 9)
+		create_squares()
+	
+	#print('change_squares() finished')
 
 
 
@@ -347,9 +342,18 @@ def where_was_the_step():
 	Calculates moving according to "distance_to_change", which includes
 	hysteresis.
 	'''
-	print('where_was_the_step()')
+	#print('where_was_the_step()')
 	camera_position = scene.active_camera.worldPosition
 	
+	# if too large distance:
+	values_x = abs(squares[5].x), abs(camera_position.x)
+	values_y = abs(squares[5].y), abs(camera_position.y)
+	if max(values_x) - min(values_x) > distance_to_change * 2:
+		return 10  # 10 means that step was too far
+	elif max(values_y) - min(values_y) > distance_to_change * 2:
+		return 10
+	
+	# general steps:
 	if camera_position.x - squares[5].x > distance_to_change:  # to top
 		if camera_position.y - squares[5].y > distance_to_change:  # to top-left
 			return 1
@@ -382,16 +386,16 @@ def where_was_the_step():
 def place_objects(*_squares):
 	'''Places randomly chosen grass objects into randomly chosen places
 	in given squares.
-	rev. 2
+	rev. 3
 	'''	
-	print('place_objects() started')
+	#print('place_objects() started')
 	for square_number in _squares:
 		
 		for count in range(grass_amount):
 			ground_obj, U, V, point, normal  = receive_point(square_number)
 			#point = (-21.23577, 23.35219, 32.67959)
 			#U = 0.5; V = 0.5; ground = scene.objects['ground']
-			print('hitnormal =', normal)
+			#print('hitnormal =', normal)
 			
 			if ground_obj:
 				#print('ground')
@@ -407,13 +411,13 @@ def place_objects(*_squares):
 					
 					random_rot_value = random.choice((0.7, 0.8, 0.9, 1.0, 1.1, 1.2))
 					random_scale_value = random.choice((0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3))
-					#added.worldOrientation.rotate(Euler((0, 0 ,0.1 * random_rot_value)))
+					added.worldOrientation.rotate(Euler((0, 0 ,0.1 * random_rot_value)))
 					added.worldScale = Vector((1 * random_scale_value, 1 * random_scale_value, 1 * random_scale_value))
 					squares[square_number].objects.append(added)
 					#queue('store', (grass, point, square_number))
 					#print('added something')
 			
-	print('place_objects() finished')
+	#print('place_objects() finished')
 
 
 
@@ -437,7 +441,7 @@ def receive_point(square_number):
 	#print('coord_x =', coord_x, 'coord_y =', coord_y)
 	#print('height_for_ray =', height_for_ray)
 	
-	point_from = (coord_x, coord_y, height_for_ray)
+	point_from = (coord_x, coord_y, scene.active_camera.worldPosition.z + height_for_ray)
 	point_to = (coord_x, coord_y, 0)
 	answer = owner.rayCast(point_from, point_to, 0, 'ground', 1, 1, 2, 0b1111111111111111)  # owner because some object needs to be there
 	
@@ -461,8 +465,8 @@ def receive_pixel_number(U, V, ground):
 	px_vertical = int(V * mask_height)  # U - width, V - height
 	
 	px_ordinal_number = (mask_width * (px_vertical - 1)) + px_horizontal  # from 512x512 image
-	#pixel_number = (px_ordinal_number * 4)  # *4 - RGBA (or ARGB) (x4 of each color);
-	pixel_number = px_ordinal_number
+	pixel_number = (px_ordinal_number * 4)  # *4 - RGBA (or ARGB) (x4 of each color);
+	#pixel_number = px_ordinal_number  # for arrays in while cycle
 	# we don't make -1 because in 0 there is alpha value.
 	
 	return pixel_number
@@ -473,10 +477,14 @@ def check_pixel(pixel_number, ground):
 	Returns: True or False (0 or 1).
 	'''
 	mask = grass_masks['{0}'.format(str(ground))]
-	#color = mask.pixels[pixel_number]
-	color_0_1 = mask[pixel_number]
+	#color = mask.pixels[pixel_number]  # for bpy.data.image
+	color = mask[pixel_number]  # for arrays
 	
-	return color_0_1
+	#return color
+	if color >= 0.98:
+		return True
+	else:
+		return False
 
 
 def normal_to_xyz_rot(normal):
@@ -560,7 +568,7 @@ def remove_objects(*_squares):
 	[[координаты], [список объектов травы]].
 	Вызывается из step_forward_left(), которая вызывается из change_squares().
 	'''
-	print('remove_objects()')
+	#print('remove_objects()')
 	if not squares:
 		print('remove_objects(): Squares with grass are absent!')
 		return
@@ -578,7 +586,7 @@ def remove_objects(*_squares):
 			del squares[number].objects[:]
 			#queue.freeze = False
 				
-	print('remove_objects() finished')
+	#print('remove_objects() finished')
 
 
 def delete_recursive(obj):
@@ -604,7 +612,7 @@ def delete_recursive(obj):
 
 
 
-class Queue():
+class Queue():  # Is not used now.
 	'''receives objects for adding to scene.
 	'''
 	def __init__(self):
@@ -643,29 +651,23 @@ def transform_grass_masks_to_arrays():
 	'''Transforms grass masks objects to corresponding arrays.
 	Because image objects of bpy are very slow.
 	'''
-	print('transforming masks to arrays')
+	#print('transforming masks to arrays')
 	global grass_masks
 	grass_masks_copy = grass_masks.copy()
 	
 	for key in grass_masks_copy:
-		#print('key:', key)
-		mask_array = array.array('b')
 		pixels = grass_masks[key].pixels
-		length = len(pixels)
-		index = 1
-		for count in humrange(1, length // 4):
-			#print('count =', count)
-			pixel = pixels[index]
-			if pixel >= 0.9:
-				mask_array.append(1)
-			else:
-				mask_array.append(0)
-			index += 4
+		mask_array = array.array('f')
+		mask_array.extend(pixels)
 		grass_masks[key] = mask_array
-	print('transformation finished')
+	#print('transformation finished')
 
 		
 queue = Queue()
+
+
+
+
 
 
 
