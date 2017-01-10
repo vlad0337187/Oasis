@@ -1,0 +1,50 @@
+﻿<html>
+
+<head>
+    <title>Oasis - open game progect.</title>
+		<meta charset="utf-8" />
+		<!-- Compiler: -->
+		<script  type="text/javascript" src="./scripts/coffee-script_(fixed).js" charset="utf-8"></script>
+		<!-- fixed with such way: https://github.com/jashkenas/coffeescript/issues/4263#issuecomment-262409534 -->
+		<script type="text/coffeescript" src='./scripts/translation.coffee' charset='utf-8'></script>
+		<script type="text/coffeescript" src='./scripts/changing_address.coffee' charset='utf-8'></script>
+
+
+		<link href="./css/main_theme.css" rel="stylesheet">
+
+		<!-- <script type="text/coffeescript" src='./testing/alert.coffee' charset='utf-8'></script>
+		<script type="text/coffeescript" charset="utf-8">
+		alert "вав"
+		</script> -->
+
+
+</head>
+
+<body>
+	<a href="index.html" class='logo'><!--<img src="./images/logo1.png" alt="Image not found." width="100%">-->
+	Oasis
+	</a>
+	<ul class='main_menu'>
+		<!--Не использовал id чтобы не было автопрокрутки при изменении "хэша" (текста после знака диез)-->
+		<!--id используется в css и translation.coffee-->
+		<!--Хэш используется в translation.coffee и main_theme.css-->
+		<li id='main' onclick="change_address('/main')"></li>
+		<li id='news' onclick="change_address('/news')"></li>
+		<li id='development_history' onclick="change_address('/development_history')"></li>
+		<li id='current_state' onclick="change_address('/current_state')"></li>
+		<li id='gallery' onclick="change_address('/gallery')"></li>
+		<li id='donations' onclick="change_address('/donations')"></li>
+	</ul>
+
+	<!-- <object type="text/html" data="./testing/many_text.html" class='main_page'>
+		<p>page with many text is absent</p>
+	</object> -->
+
+	<iframe name='main_frame' class='main_frame' scrolling="no" seamless></iframe>
+
+
+
+
+</body>
+
+</html>

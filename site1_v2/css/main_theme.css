@@ -1,0 +1,162 @@
+::selection { /* Выделенный текст и его фон */
+	color:  rgb(200,200,200);
+	background: rgb(0,23,52); /* Цвет фона */
+}
+::-moz-selection { /* Выделенный текст и его фон */
+	color:  rgb(200,200,200);
+	background: rgb(0, 5, 10); /* Цвет фона */
+}
+:root {
+	--main_menu-shadow: 10px 10px 4px;
+}
+
+
+
+
+body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	background: linear-gradient(to top right, rgb(0, 0, 0) 0%,  rgb(84, 118, 155) 100%);
+	background-color: black; /*на всякий случай*/
+	background-repeat: no-repeat, no-repeat;
+	background-attachment: local;
+
+	width: 100%;
+	min-height: 100vh;
+	margin: 0;
+	/*padding: 0;*/
+	/*overflow: auto;*/
+	font-family: Liberation Sans;
+
+	/*--shadow-blur: 4px;*/
+}
+
+
+
+
+.logo {
+	z-index: 50;
+	position: relative;
+	display: inline-flex;
+
+	/*margin-left: 38vw;*/
+	margin-top: 5vh;
+	/*width: 200px;*/
+	/*flex-basis: 50%;*/
+	/*left: calc(49vw - 100px);*/ /* половина от размера надписи */
+	/*top: 4vh;*/
+
+	font-weight: normal;
+	font-size: 85px;
+	text-decoration: none;
+	color: rgb(215, 215, 215);
+	text-shadow: 5px 5px 3px rgb(33, 33, 33);
+
+	transition-duration: 350ms;
+}
+.logo:hover {
+	/*color: rgb(255, 255, 255);*/
+	text-shadow: 5px 5px 5px rgb(30, 125, 220);
+
+	/*transform: translate(1vw);*/
+	transform: translate(0, -0.3vw);
+}
+.logo:active {
+	color: rgb(45, 45, 45);
+	text-shadow: 5px 5px 2px rgb(200, 200, 200);
+
+	transition-duration: 1250ms;
+}
+
+
+
+
+.main_menu {
+	z-index: 49;
+	position: relative;
+	display: flex;
+	/*flex-basis: 200px auto;*/
+	min-width: 80%;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	margin-top: 2vh;
+
+	/*width: 1150px;
+	padding-left: 0;
+	padding-right: 0;
+	top: 5vh;
+	left: calc(50vw - 625px);*/
+}
+.main_menu > li {
+	display: inline-flex;
+	/*padding-right: 2vw;*/
+	align-self: center;
+	padding-top: 5px;
+	min-height: 40px;
+
+
+	font-size: 22px;
+	/*font-weight: bold;*/
+	/*font-family: Courier;*/
+	color: rgb(210, 210, 210);
+	text-shadow: 5px 5px 3px rgb(22, 22, 22);
+
+	transition-duration: 250ms;
+}
+.main_menu > li:first-child {
+}
+.main_menu > li:hover {
+	/*color: white;*/
+	text-shadow: 5px 5px 3px black;
+	cursor: pointer;
+	/*text-decoration: underline;*/
+
+	transform: translate(0, -0.2vw);
+}
+
+
+#main:hover {
+	text-shadow: var(--main_menu-shadow) rgb(50, 120, 255); /*голубой*/
+}
+#news:hover {
+	text-shadow: var(--main_menu-shadow) rgb(20, 200, 150); /*зелено-голубой*/
+}
+#development_history:hover {
+	text-shadow: var(--main_menu-shadow) rgb(50, 200, 50); /*зеленый*/
+}
+#current_state:hover {
+	text-shadow: var(--main_menu-shadow) rgb(150, 200, 20); /*желтый*/
+}
+#gallery:hover {
+	text-shadow: var(--main_menu-shadow) rgb(200, 80, 20); /*оранжевый*/
+}
+#donations:hover {
+	text-shadow: var(--main_menu-shadow) rgb(190, 30, 10); /*красный*/
+}
+/*text-shadow: 5px 5px 3px rgb(200, 20, 150);*/ /*фиолетовый*/
+
+
+
+
+.main_frame {
+	z-index: 48;
+	display: inline-flex;
+	position: relative;
+	overflow: hidden;
+
+	/*top: 6vh;
+
+	padding: 0;*/
+	width: 95%;
+	min-height: 110vh;
+	margin: 0;
+	/*margin-top: 0px;*/
+	/*padding: 0;*/
+
+	/*height: 100vh;*/
+	/*word-break: break-all;*/ /* только к тексту в этом блоке, не в загруженном html*/
+
+	border: 0px solid black;
+}
